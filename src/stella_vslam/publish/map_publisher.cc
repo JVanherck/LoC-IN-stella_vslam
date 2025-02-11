@@ -21,11 +21,20 @@ map_publisher::~map_publisher() {
 void map_publisher::set_current_cam_pose(const Mat44_t& cam_pose_cw) {
     std::lock_guard<std::mutex> lock(mtx_cam_pose_);
     cam_pose_cw_ = cam_pose_cw;
+    camera_poses.push_back(std::make_shared<Mat44_t>(cam_pose_cw_));
 }
 
 Mat44_t map_publisher::get_current_cam_pose() {
     std::lock_guard<std::mutex> lock(mtx_cam_pose_);
     return cam_pose_cw_;
+}
+
+
+unsigned int map_publisher::get_camera_poses(std::vector<std::shared_ptr<Mat44_t>> &all_camera_poses)
+{
+    std::lock_guard<std::mutex> lock(mtx_cam_pose_);
+    all_camera_poses = camera_poses;
+    return camera_poses.size();
 }
 
 unsigned int map_publisher::get_keyframes(std::vector<std::shared_ptr<data::keyframe>>& all_keyfrms) {

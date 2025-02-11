@@ -40,6 +40,8 @@ system::system(const std::shared_ptr<config>& cfg, const std::string& vocab_file
     spdlog::debug("CONSTRUCT: system");
     print_info();
 
+    spdlog::info("System is initializing..");
+
     // load ORB vocabulary
     spdlog::info("loading ORB vocabulary: {}", vocab_file_path);
     bow_vocab_ = data::bow_vocabulary_util::load(vocab_file_path);

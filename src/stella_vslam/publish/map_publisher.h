@@ -49,6 +49,8 @@ public:
      */
     Mat44_t get_current_cam_pose();
 
+    unsigned int get_camera_poses(std::vector<std::shared_ptr<Mat44_t>>& all_camera_poses);
+
     /**
      * Get all keyframes
      * @param all_keyfrms
@@ -78,6 +80,9 @@ private:
     std::mutex mtx_cam_pose_;
     Mat44_t cam_pose_cw_ = Mat44_t::Identity();
     Mat44_t cam_pose_wc_ = Mat44_t::Identity();
+
+    std::vector<std::shared_ptr<Mat44_t>> camera_poses;
+
 };
 
 } // namespace publish
