@@ -195,6 +195,7 @@ bool tracking_module::track(bool relocalization_is_needed,
 
     bool succeeded = false;
     if (relocalize_by_pose_is_requested()) {
+        std::cout << "Relocalizing by pose" << std::endl;
         // Force relocalization by pose
         succeeded = relocalize_by_pose(get_relocalize_by_pose_request());
     }

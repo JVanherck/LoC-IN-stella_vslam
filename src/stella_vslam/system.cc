@@ -334,6 +334,73 @@ void system::enable_temporal_mapping() {
     map_db_->set_fixed_keyframe_id_threshold();
 }
 
+data::frame system::create_lidar_frame(const cv::Mat &rgb_img, const cv::Mat &depthmap, const double timestamp, const cv::Mat &mask, const Mat44_t &pose_cw)
+{
+    // color and depth scale conversion
+    if (!camera_->is_valid_shape(rgb_img)) {
+        spdlog::warn("preprocess: Input image size is invalid");
+    }
+    if (!camera_->is_valid_shape(depthmap)) {
+        spdlog::warn("preprocess: Input image size is invalid");
+    }
+    cv::Mat img_gray = rgb_img;
+    cv::Mat img_depth = depthmap;
+    util::convert_to_grayscale(img_gray, camera_->color_order_);
+    util::convert_to_true_depth(img_depth, depthmap_factor_);
+
+    data::frame_observation frm_obs;
+
+    // Extract ORB feature
+    keypts_.clear();
+    extractor_left_->extract(img_gray, mask, keypts_, frm_obs.descriptors_);
+    if (keypts_.empty()) {
+        spdlog::warn("preprocess: cannot extract any keypoints");
+    }
+
+    // Undistort keypoints
+    camera_->undistort_keypoints(keypts_, frm_obs.undist_keypts_);
+
+    // Calculate disparity from depth
+    // Initialize with invalid value
+    frm_obs.stereo_x_right_ = std::vector<float>(frm_obs.undist_keypts_.size(), -1);
+    frm_obs.depths_ = std::vector<float>(frm_obs.undist_keypts_.size(), -1);
+
+    for (unsigned int idx = 0; idx < frm_obs.undist_keypts_.size(); idx++) {
+        const auto& keypt = keypts_.at(idx);
+        const auto& undist_keypt = frm_obs.undist_keypts_.at(idx);
+
+        const float x = keypt.pt.x;
+        const float y = keypt.pt.y;
+
+        const float depth = img_depth.at<float>(y, x);
+
+        if (depth <= 0) {
+            continue;
+        }
+
+        frm_obs.depths_.at(idx) = depth;
+        frm_obs.stereo_x_right_.at(idx) = undist_keypt.pt.x - camera_->focal_x_baseline_ / depth;
+    }
+
+    // Convert to bearing vector
+    camera_->convert_keypoints_to_bearings(frm_obs.undist_keypts_, frm_obs.bearings_);
+
+    // Assign all the keypoints into grid
+    frm_obs.num_grid_cols_ = num_grid_cols_;
+    frm_obs.num_grid_rows_ = num_grid_rows_;
+    data::assign_keypoints_to_grid(camera_, frm_obs.undist_keypts_, frm_obs.keypt_indices_in_cells_,
+                                   frm_obs.num_grid_cols_, frm_obs.num_grid_rows_);
+
+    // Detect marker
+    std::unordered_map<unsigned int, data::marker2d> markers_2d;
+    if (marker_detector_) {
+        marker_detector_->detect(img_gray, markers_2d);
+    }
+
+    data::frame frame{next_frame_id_++, timestamp, camera_, orb_params_, frm_obs, std::move(markers_2d)};
+    return frame;
+}
+
 data::frame system::create_monocular_frame(const cv::Mat& img, const double timestamp, const cv::Mat& mask) {
     // color conversion
     if (!camera_->is_valid_shape(img)) {
@@ -496,6 +563,23 @@ data::frame system::create_RGBD_frame(const cv::Mat& rgb_img, const cv::Mat& dep
     }
 
     return data::frame(next_frame_id_++, timestamp, camera_, orb_params_, frm_obs, std::move(markers_2d));
+}
+
+std::shared_ptr<Mat44_t> system::feed_lidar_frame(const cv::Mat& img, const cv::Mat& depthmap, const double timestamp, const cv::Mat& mask, const Mat44_t& pose_cw)
+{
+    check_reset_request();
+
+    assert(camera_->setup_type_ == camera::setup_type_t::Monocular);
+    if(img.empty() || depthmap.empty())
+    {
+        spdlog::warn("preprocess: empty image");
+        return nullptr;
+    }
+    const auto start = std::chrono::system_clock::now();
+    auto frm = create_lidar_frame(img, depthmap, timestamp, mask, pose_cw);
+    const auto end = std::chrono::system_clock::now();
+    double extraction_time_elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+    return feed_frame(frm, img, extraction_time_elapsed_ms);
 }
 
 std::shared_ptr<Mat44_t> system::feed_monocular_frame(const cv::Mat& img, const double timestamp, const cv::Mat& mask) {

@@ -144,6 +144,9 @@ public:
     data::frame create_RGBD_frame(const cv::Mat& rgb_img, const cv::Mat& depthmap, const double timestamp, const cv::Mat& mask);
     std::shared_ptr<Mat44_t> feed_RGBD_frame(const cv::Mat& rgb_img, const cv::Mat& depthmap, const double timestamp, const cv::Mat& mask = cv::Mat{});
 
+    data::frame create_lidar_frame(const cv::Mat& rgb_img, const cv::Mat& depthmap, const double timestamp, const cv::Mat& mask, const Mat44_t& pose_cw);
+    std::shared_ptr<Mat44_t> feed_lidar_frame(const cv::Mat& rgb_img, const cv::Mat& depthmap, const double timestamp, const cv::Mat& mask, const Mat44_t& pose_cw);
+
     //-----------------------------------------
     // pose initializing/updating
 
