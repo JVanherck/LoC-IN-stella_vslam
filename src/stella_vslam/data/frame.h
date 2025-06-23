@@ -60,6 +60,9 @@ public:
      */
     void set_pose_cw(const Mat44_t& pose_cw);
 
+    void set_fixed();
+    bool get_fixed() const;
+
     /**
      * Get camera pose
      */
@@ -185,6 +188,15 @@ public:
     //! reference keyframe for tracking
     std::shared_ptr<keyframe> ref_keyfrm_ = nullptr;
 
+    inline void set_num_lms(unsigned int num_tracked_lms, unsigned int num_reliable_lms)
+    {
+        num_tracked_lms_ = num_tracked_lms;
+        num_reliable_lms_ = num_reliable_lms;
+    }
+
+    inline unsigned int get_num_tracked_lms() const { return num_tracked_lms_; }
+    inline unsigned int get_num_reliable_lms() const{ return num_reliable_lms_; }
+
 private:
     //! landmarks, whose nullptr indicates no-association
     std::vector<std::shared_ptr<landmark>> landmarks_;
@@ -192,6 +204,7 @@ private:
 
     //! camera pose: world -> camera
     bool pose_is_valid_ = false;
+    bool fixed = false;
     Mat44_t pose_cw_;
 
     //! Camera pose
@@ -203,6 +216,9 @@ private:
     Mat33_t rot_wc_;
     //! translation: camera -> world
     Vec3_t trans_wc_;
+
+    unsigned int num_tracked_lms_;
+    unsigned int num_reliable_lms_;
 };
 
 } // namespace data

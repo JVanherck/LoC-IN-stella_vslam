@@ -32,6 +32,8 @@ void trajectory_io::save_frame_trajectory(const std::string& path, const std::st
     const auto rel_cam_poses_from_ref_keyfrms = frm_stats.get_relative_cam_poses();
     const auto timestamps = frm_stats.get_timestamps();
     const auto is_lost_frms = frm_stats.get_lost_frames();
+    const auto num_tracked_lms = frm_stats.get_num_tracked_lms();
+    const auto num_reliable_lms = frm_stats.get_num_reliable_lms();
 
     if (num_valid_frms == 0) {
         spdlog::warn("there are no valid frames, cannot dump frame trajectory");
@@ -95,6 +97,14 @@ void trajectory_io::save_frame_trajectory(const std::string& path, const std::st
                 << std::setprecision(9)
                 << trans_wc(0) << " " << trans_wc(1) << " " << trans_wc(2) << " "
                 << quat_wc.x() << " " << quat_wc.y() << " " << quat_wc.z() << " " << quat_wc.w() << std::endl;
+        }
+        else if (format == "CUSTOM")
+        {
+            ofs << frm_id << " " << num_tracked_lms.at(frm_id) << " " << num_reliable_lms.at(frm_id) << " " << std::setprecision(9)
+                << cam_pose_wc(0, 0) << " " << cam_pose_wc(0, 1) << " " << cam_pose_wc(0, 2) << " " << cam_pose_wc(0, 3) << " "
+                << cam_pose_wc(1, 0) << " " << cam_pose_wc(1, 1) << " " << cam_pose_wc(1, 2) << " " << cam_pose_wc(1, 3) << " "
+                << cam_pose_wc(2, 0) << " " << cam_pose_wc(2, 1) << " " << cam_pose_wc(2, 2) << " " << cam_pose_wc(2, 3) << " "
+                << cam_pose_wc(3, 0) << " " << cam_pose_wc(3, 1) << " " << cam_pose_wc(3, 2) << " " << cam_pose_wc(3, 3) << std::endl;
         }
         else {
             throw std::runtime_error("Not implemented: trajectory format \"" + format + "\"");

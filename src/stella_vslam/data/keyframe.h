@@ -52,7 +52,7 @@ public:
              const double timestamp, const Mat44_t& pose_cw, camera::base* camera,
              const feature::orb_params* orb_params, const frame_observation& frm_obs,
              const bow_vector& bow_vec, const bow_feature_vector& bow_feat_vec,
-             std::unordered_map<unsigned int, marker2d> markers_2d = {});
+             std::unordered_map<unsigned int, marker2d> markers_2d = {}, bool fixed = false);
     virtual ~keyframe();
 
     // Factory method for create keyframe
@@ -62,7 +62,7 @@ public:
         const double timestamp, const Mat44_t& pose_cw, camera::base* camera,
         const feature::orb_params* orb_params, const frame_observation& frm_obs,
         const bow_vector& bow_vec, const bow_feature_vector& bow_feat_vec,
-        std::unordered_map<unsigned int, marker2d> markers_2d = {});
+        std::unordered_map<unsigned int, marker2d> markers_2d = {}, bool fixed = false);
     static std::shared_ptr<keyframe> from_stmt(sqlite3_stmt* stmt,
                                                camera_database* cam_db,
                                                orb_params_database* orb_params_db,
@@ -134,6 +134,8 @@ public:
      * Get the translation of the camera pose
      */
     Vec3_t get_trans_cw() const;
+
+    bool get_fixed() const;
 
     //-----------------------------------------
     // features and observations
@@ -300,6 +302,8 @@ private:
     Mat44_t pose_wc_;
     //! camera center
     Vec3_t trans_wc_;
+
+    bool fixed = false;
 
     //-----------------------------------------
     // observations

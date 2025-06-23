@@ -398,6 +398,8 @@ data::frame system::create_lidar_frame(const cv::Mat &rgb_img, const cv::Mat &de
     }
 
     data::frame frame{next_frame_id_++, timestamp, camera_, orb_params_, frm_obs, std::move(markers_2d)};
+    frame.set_pose_cw(pose_cw);
+    frame.set_fixed();
     return frame;
 }
 

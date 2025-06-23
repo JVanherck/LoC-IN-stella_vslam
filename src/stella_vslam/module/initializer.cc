@@ -87,6 +87,7 @@ bool initializer::initialize(const camera::setup_type_t setup_type,
                 // failed
                 return false;
             }
+            spdlog::debug("Try Initialize stereo called and succeeded");
 
             // create new map if succeeded
             create_map_for_stereo(bow_vocab, curr_frm);
@@ -184,12 +185,15 @@ bool initializer::create_map_for_monocular(data::bow_vocabulary* bow_vocab, data
         }
 
         // set the camera poses
-        init_frm_.set_pose_cw(Mat44_t::Identity());
-        Mat44_t cam_pose_cw = Mat44_t::Identity();
-        cam_pose_cw.block<3, 3>(0, 0) = initializer_->get_rotation_ref_to_cur();
-        cam_pose_cw.block<3, 1>(0, 3) = initializer_->get_translation_ref_to_cur();
-        curr_frm.set_pose_cw(cam_pose_cw);
-
+        if(!init_frm_.pose_is_valid())
+            init_frm_.set_pose_cw(Mat44_t::Identity());
+        if(!curr_frm.pose_is_valid())
+        {
+            Mat44_t cam_pose_cw = Mat44_t::Identity();
+            cam_pose_cw.block<3, 3>(0, 0) = initializer_->get_rotation_ref_to_cur();
+            cam_pose_cw.block<3, 1>(0, 3) = initializer_->get_translation_ref_to_cur();
+            curr_frm.set_pose_cw(cam_pose_cw);
+        }
         // destruct the initializer
         initializer_.reset(nullptr);
     }
@@ -338,7 +342,8 @@ bool initializer::create_map_for_stereo(data::bow_vocabulary* bow_vocab, data::f
     assert(state_ == initializer_state_t::Initializing);
 
     // create an initial keyframe
-    curr_frm.set_pose_cw(Mat44_t::Identity());
+    if(!curr_frm.pose_is_valid())
+        curr_frm.set_pose_cw(Mat44_t::Identity());
     auto curr_keyfrm = data::keyframe::make_keyframe(map_db_->next_keyframe_id_++, curr_frm);
     curr_keyfrm->graph_node_->set_spanning_root(curr_keyfrm);
     map_db_->add_spanning_root(curr_keyfrm);

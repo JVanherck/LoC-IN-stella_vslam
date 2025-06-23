@@ -34,7 +34,6 @@ bool loop_bundle_adjuster::is_running() const {
 
 void loop_bundle_adjuster::optimize(const std::shared_ptr<data::keyframe>& curr_keyfrm) {
     spdlog::info("start loop bundle adjustment");
-
     {
         std::lock_guard<std::mutex> lock(mtx_thread_);
         loop_BA_is_running_ = true;
@@ -48,6 +47,7 @@ void loop_bundle_adjuster::optimize(const std::shared_ptr<data::keyframe>& curr_
     eigen_alloc_unord_map<unsigned int, Mat44_t> keyfrm_to_pose_cw_after_global_BA;
     eigen_alloc_unord_map<unsigned int, std::array<Vec3_t, 4>> marker_to_pos_w_after_global_BA;
     const auto global_BA = optimize::global_bundle_adjuster(num_iter_, use_huber_kernel_);
+
     bool ok = global_BA.optimize(curr_keyfrm->graph_node_->get_keyframes_from_root(),
                                  optimized_keyfrm_ids, optimized_landmark_ids,
                                  optimized_marker_ids,
@@ -55,7 +55,6 @@ void loop_bundle_adjuster::optimize(const std::shared_ptr<data::keyframe>& curr_
                                  keyfrm_to_pose_cw_after_global_BA,
                                  marker_to_pos_w_after_global_BA,
                                  &abort_loop_BA_);
-
     {
         std::lock_guard<std::mutex> lock1(mtx_thread_);
 

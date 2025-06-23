@@ -177,6 +177,7 @@ void local_bundle_adjuster_g2o::optimize(data::map_database* map_db,
 
         all_keyfrms.emplace(id_local_keyfrm_pair);
         auto keyfrm_vtx = keyfrm_vtx_container.create_vertex(local_keyfrm, false);
+        keyfrm_vtx->setFixed(local_keyfrm->get_fixed());
         optimizer.addVertex(keyfrm_vtx);
     }
 

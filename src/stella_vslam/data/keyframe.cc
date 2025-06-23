@@ -110,13 +110,14 @@ keyframe::keyframe(unsigned int id, const frame& frm)
       landmarks_(frm.get_landmarks()) {
     // set pose parameters (pose_wc_, trans_wc_) using frm.pose_cw_
     set_pose_cw(frm.get_pose_cw());
+    fixed = frm.get_fixed();
 }
 
 keyframe::keyframe(const unsigned int id, const double timestamp,
                    const Mat44_t& pose_cw, camera::base* camera,
                    const feature::orb_params* orb_params, const frame_observation& frm_obs,
                    const bow_vector& bow_vec, const bow_feature_vector& bow_feat_vec,
-                   std::unordered_map<unsigned int, marker2d> markers_2d)
+                   std::unordered_map<unsigned int, marker2d> markers_2d, bool fixed)
     : id_(id),
       timestamp_(timestamp), camera_(camera),
       orb_params_(orb_params), frm_obs_(frm_obs),
@@ -125,7 +126,7 @@ keyframe::keyframe(const unsigned int id, const double timestamp,
       landmarks_(std::vector<std::shared_ptr<landmark>>(frm_obs_.undist_keypts_.size(), nullptr)) {
     // set pose parameters (pose_wc_, trans_wc_) using pose_cw_
     set_pose_cw(pose_cw);
-
+    this->fixed = fixed;
     // The following process needs to take place:
     //   should set the pointers of landmarks_ using add_landmark()
     //   should set connections using graph_node->update_connections()
@@ -150,12 +151,12 @@ std::shared_ptr<keyframe> keyframe::make_keyframe(
     const Mat44_t& pose_cw, camera::base* camera,
     const feature::orb_params* orb_params, const frame_observation& frm_obs,
     const bow_vector& bow_vec, const bow_feature_vector& bow_feat_vec,
-    std::unordered_map<unsigned int, marker2d> markers_2d) {
+    std::unordered_map<unsigned int, marker2d> markers_2d, bool fixed) {
     auto ptr = std::allocate_shared<keyframe>(
         Eigen::aligned_allocator<keyframe>(),
         id, timestamp,
         pose_cw, camera, orb_params,
-        frm_obs, bow_vec, bow_feat_vec, markers_2d);
+        frm_obs, bow_vec, bow_feat_vec, markers_2d, fixed);
     // covisibility graph node (connections is not assigned yet)
     ptr->graph_node_ = stella_vslam::make_unique<graph_node>(ptr);
     return ptr;
@@ -361,17 +362,20 @@ bool keyframe::bind_to_stmt(sqlite3* db, sqlite3_stmt* stmt) const {
 }
 
 void keyframe::set_pose_cw(const Mat44_t& pose_cw) {
-    std::lock_guard<std::mutex> lock(mtx_pose_);
-    pose_cw_ = pose_cw;
+    if(!fixed)
+    {
+        std::lock_guard<std::mutex> lock(mtx_pose_);
+        pose_cw_ = pose_cw;
 
-    const Mat33_t rot_cw = pose_cw_.block<3, 3>(0, 0);
-    const Vec3_t trans_cw = pose_cw_.block<3, 1>(0, 3);
-    const Mat33_t rot_wc = rot_cw.transpose();
-    trans_wc_ = -rot_wc * trans_cw;
+        const Mat33_t rot_cw = pose_cw_.block<3, 3>(0, 0);
+        const Vec3_t trans_cw = pose_cw_.block<3, 1>(0, 3);
+        const Mat33_t rot_wc = rot_cw.transpose();
+        trans_wc_ = -rot_wc * trans_cw;
 
-    pose_wc_ = Mat44_t::Identity();
-    pose_wc_.block<3, 3>(0, 0) = rot_wc;
-    pose_wc_.block<3, 1>(0, 3) = trans_wc_;
+        pose_wc_ = Mat44_t::Identity();
+        pose_wc_.block<3, 3>(0, 0) = rot_wc;
+        pose_wc_.block<3, 1>(0, 3) = trans_wc_;
+    }
 }
 
 Mat44_t keyframe::get_pose_cw() const {
@@ -397,6 +401,11 @@ Mat33_t keyframe::get_rot_cw() const {
 Vec3_t keyframe::get_trans_cw() const {
     std::lock_guard<std::mutex> lock(mtx_pose_);
     return pose_cw_.block<3, 1>(0, 3);
+}
+
+bool keyframe::get_fixed() const
+{
+    return fixed;
 }
 
 bool keyframe::bow_is_available() const {

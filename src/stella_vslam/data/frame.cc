@@ -20,13 +20,16 @@ frame::frame(unsigned int frame_id, const double timestamp, camera::base* camera
       landmarks_(std::vector<std::shared_ptr<landmark>>(frm_obs_.undist_keypts_.size(), nullptr)) {}
 
 void frame::set_pose_cw(const Mat44_t& pose_cw) {
-    pose_is_valid_ = true;
-    pose_cw_ = pose_cw;
+    if(!fixed)
+    {
+        pose_is_valid_ = true;
+        pose_cw_ = pose_cw;
 
-    rot_cw_ = pose_cw_.block<3, 3>(0, 0);
-    rot_wc_ = rot_cw_.transpose();
-    trans_cw_ = pose_cw_.block<3, 1>(0, 3);
-    trans_wc_ = -rot_cw_.transpose() * trans_cw_;
+        rot_cw_ = pose_cw_.block<3, 3>(0, 0);
+        rot_wc_ = rot_cw_.transpose();
+        trans_cw_ = pose_cw_.block<3, 1>(0, 3);
+        trans_wc_ = -rot_cw_.transpose() * trans_cw_;
+    }
 }
 
 Mat44_t frame::get_pose_cw() const {
@@ -38,6 +41,16 @@ Mat44_t frame::get_pose_wc() const {
     pose_wc.block<3, 3>(0, 0) = rot_wc_;
     pose_wc.block<3, 1>(0, 3) = trans_wc_;
     return pose_wc;
+}
+
+bool frame::get_fixed() const
+{
+    return fixed;
+}
+
+void frame::set_fixed()
+{
+    fixed = true;
 }
 
 Vec3_t frame::get_trans_wc() const {

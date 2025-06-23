@@ -69,7 +69,6 @@ public:
 
     //! Main stream of the tracking module
     std::shared_ptr<Mat44_t> feed_frame(data::frame frame);
-
     //! Request to update the pose to a given one.
     //! Return failure in case if previous request was not finished yet.
     bool request_relocalize_by_pose(const Mat44_t& pose_cw);

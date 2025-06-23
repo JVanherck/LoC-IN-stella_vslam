@@ -75,6 +75,9 @@ public:
      */
     std::map<unsigned int, bool> get_lost_frames() const;
 
+    std::map<unsigned int, unsigned int> get_num_tracked_lms() const;
+    std::map<unsigned int, unsigned int> get_num_reliable_lms() const;
+
     /**
      * Clear frame statistics
      */
@@ -96,6 +99,9 @@ private:
     std::unordered_map<unsigned int, double> timestamps_;
     //! Flag whether each frame is lost or not
     std::unordered_map<unsigned int, bool> is_lost_frms_;
+
+    std::unordered_map<unsigned int, unsigned int> num_tracked_lms_;
+    std::unordered_map<unsigned int, unsigned int> num_reliable_lms_;
 };
 
 } // namespace data

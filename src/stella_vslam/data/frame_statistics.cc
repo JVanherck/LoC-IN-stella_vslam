@@ -18,6 +18,11 @@ void frame_statistics::update_frame_statistics(const data::frame& frm, const boo
         rel_cam_poses_from_ref_keyfrms_[frm.id_] = rel_cam_pose_from_ref_keyfrm;
         assert(!timestamps_.count(frm.id_));
         timestamps_[frm.id_] = frm.timestamp_;
+
+        assert(!num_tracked_lms_.count(frm.id_));
+        num_tracked_lms_[frm.id_] = frm.get_num_tracked_lms();
+        assert(!num_reliable_lms_.count(frm.id_));
+        num_reliable_lms_[frm.id_] = frm.get_num_reliable_lms();
     }
 
     assert(!is_lost_frms_.count(frm.id_));
@@ -85,6 +90,16 @@ std::map<unsigned int, double> frame_statistics::get_timestamps() const {
 
 std::map<unsigned int, bool> frame_statistics::get_lost_frames() const {
     return {is_lost_frms_.begin(), is_lost_frms_.end()};
+}
+
+std::map<unsigned int, unsigned int> frame_statistics::get_num_tracked_lms() const
+{
+    return {num_tracked_lms_.begin(), num_tracked_lms_.end()};
+}
+
+std::map<unsigned int, unsigned int> frame_statistics::get_num_reliable_lms() const
+{
+    return {num_reliable_lms_.begin(), num_reliable_lms_.end()};
 }
 
 void frame_statistics::clear() {

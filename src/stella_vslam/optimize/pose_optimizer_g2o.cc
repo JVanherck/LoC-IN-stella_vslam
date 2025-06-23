@@ -25,13 +25,13 @@ pose_optimizer_g2o::pose_optimizer_g2o(const unsigned int num_trials_robust, con
 
 unsigned int pose_optimizer_g2o::optimize(const data::frame& frm, Mat44_t& optimized_pose, std::vector<bool>& outlier_flags) const {
     auto num_valid_obs = optimize(frm.get_pose_cw(), frm.frm_obs_, frm.orb_params_, frm.camera_,
-                                  frm.get_landmarks(), optimized_pose, outlier_flags);
+                                  frm.get_landmarks(), optimized_pose, outlier_flags, frm.get_fixed());
     return num_valid_obs;
 }
 
 unsigned int pose_optimizer_g2o::optimize(const data::keyframe* keyfrm, Mat44_t& optimized_pose, std::vector<bool>& outlier_flags) const {
     auto num_valid_obs = optimize(keyfrm->get_pose_cw(), keyfrm->frm_obs_, keyfrm->orb_params_, keyfrm->camera_,
-                                  keyfrm->get_landmarks(), optimized_pose, outlier_flags);
+                                  keyfrm->get_landmarks(), optimized_pose, outlier_flags, keyfrm->get_fixed());
     return num_valid_obs;
 }
 
@@ -40,7 +40,7 @@ unsigned int pose_optimizer_g2o::optimize(const Mat44_t& cam_pose_cw, const data
                                           const camera::base* camera,
                                           const std::vector<std::shared_ptr<data::landmark>>& landmarks,
                                           Mat44_t& optimized_pose,
-                                          std::vector<bool>& outlier_flags) const {
+                                          std::vector<bool>& outlier_flags, bool pose_fixed = false) const {
     // 1. Construct an optimizer
 
     auto linear_solver = stella_vslam::make_unique<g2o::LinearSolverEigen<g2o::BlockSolver_6_3::PoseMatrixType>>();
@@ -60,7 +60,7 @@ unsigned int pose_optimizer_g2o::optimize(const Mat44_t& cam_pose_cw, const data
     auto frm_vtx = new internal::se3::shot_vertex();
     frm_vtx->setId(0);
     frm_vtx->setEstimate(util::converter::to_g2o_SE3(cam_pose_cw));
-    frm_vtx->setFixed(false);
+    frm_vtx->setFixed(pose_fixed);
     optimizer.addVertex(frm_vtx);
 
     const unsigned int num_keypts = frm_obs.undist_keypts_.size();

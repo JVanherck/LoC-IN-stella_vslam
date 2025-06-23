@@ -1,5 +1,4 @@
 # ----- Find dependencies -----
-
 # json
 set(json_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/3rd/json/include)
 

@@ -21,6 +21,8 @@
 #include <g2o/solvers/csparse/linear_solver_csparse.h>
 #include <g2o/core/optimization_algorithm_levenberg.h>
 
+#include <spdlog/spdlog.h>
+
 namespace stella_vslam {
 namespace optimize {
 
@@ -61,6 +63,8 @@ void optimize_impl(g2o::SparseOptimizer& optimizer,
         }
 
         auto keyfrm_vtx = keyfrm_vtx_container.create_vertex(keyfrm, keyfrm->graph_node_->is_spanning_root());
+        keyfrm_vtx->setFixed(keyfrm->get_fixed());
+
         optimizer.addVertex(keyfrm_vtx);
     }
 
@@ -180,7 +184,6 @@ void optimize_impl(g2o::SparseOptimizer& optimizer,
     }
 
     // 5. Perform optimization
-
     optimizer.initializeOptimization();
     optimizer.optimize(num_iter);
 
@@ -275,7 +278,6 @@ bool global_bundle_adjuster::optimize(const std::vector<std::shared_ptr<data::ke
             lms.push_back(lm);
         }
     }
-
     std::unordered_set<unsigned int> already_found_marker_ids;
     std::vector<std::shared_ptr<data::marker>> markers;
     for (const auto& keyfrm : keyfrms) {
@@ -293,7 +295,6 @@ bool global_bundle_adjuster::optimize(const std::vector<std::shared_ptr<data::ke
     }
 
     std::vector<bool> is_optimized_lm(lms.size(), true);
-
     auto vtx_id_offset = std::make_shared<unsigned int>(0);
     // Container of the shot vertices
     internal::se3::shot_vertex_container keyfrm_vtx_container(vtx_id_offset, keyfrms.size());

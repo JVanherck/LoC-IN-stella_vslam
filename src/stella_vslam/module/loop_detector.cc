@@ -444,7 +444,7 @@ bool loop_detector::select_loop_candidate_via_Sim3(const std::unordered_set<std:
         std::vector<bool> outlier_flags;
         Mat44_t optimized_pose;
         auto num_valid_obs = pose_optimizer_->optimize(pnp_solver->get_best_cam_pose(), cur_keyfrm_->frm_obs_, cur_keyfrm_->orb_params_, cur_keyfrm_->camera_,
-                                                       curr_match_lms_observed_in_cand, optimized_pose, outlier_flags);
+                                                       curr_match_lms_observed_in_cand, optimized_pose, outlier_flags, cur_keyfrm_->get_fixed());
 
         // Discard the candidate if the number of the inliers is less than the threshold
         const int min_num_matches_after_pose_optimize = 10;
@@ -486,7 +486,7 @@ bool loop_detector::select_loop_candidate_via_Sim3(const std::unordered_set<std:
         std::vector<bool> outlier_flags1;
         auto num_valid_obs1 = pose_optimizer_->optimize(optimized_pose,
                                                         cur_keyfrm_->frm_obs_, cur_keyfrm_->orb_params_, cur_keyfrm_->camera_,
-                                                        curr_match_lms_observed_in_cand, optimized_pose1, outlier_flags1);
+                                                        curr_match_lms_observed_in_cand, optimized_pose1, outlier_flags1, cur_keyfrm_->get_fixed());
 
         if (num_valid_obs1 < min_num_valid_obs1) {
             spdlog::debug("2. Number of inliers ({}) < threshold ({})", num_valid_obs1, min_num_valid_obs1);
@@ -518,7 +518,7 @@ bool loop_detector::select_loop_candidate_via_Sim3(const std::unordered_set<std:
         std::vector<bool> outlier_flags2;
         auto num_valid_obs2 = pose_optimizer_->optimize(optimized_pose1,
                                                         cur_keyfrm_->frm_obs_, cur_keyfrm_->orb_params_, cur_keyfrm_->camera_,
-                                                        curr_match_lms_observed_in_cand, optimized_pose2, outlier_flags2);
+                                                        curr_match_lms_observed_in_cand, optimized_pose2, outlier_flags2, cur_keyfrm_->get_fixed());
 
         // Discard if falling below the threshold
         if (num_valid_obs2 < min_num_valid_obs2) {

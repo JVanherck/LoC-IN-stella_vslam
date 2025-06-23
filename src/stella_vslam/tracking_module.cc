@@ -126,10 +126,18 @@ std::shared_ptr<Mat44_t> tracking_module::feed_frame(data::frame curr_frm) {
     bool succeeded = false;
     if (tracking_state_ == tracker_state_t::Initializing) {
         succeeded = initialize();
+        if(!succeeded)
+        {
+            return nullptr;
+        }
     }
     else {
         std::lock_guard<std::mutex> lock(mtx_stop_keyframe_insertion_);
         bool relocalization_is_needed = tracking_state_ == tracker_state_t::Lost;
+        if(relocalization_is_needed && curr_frm_.pose_is_valid())
+        {
+            request_relocalize_by_pose(curr_frm_.get_pose_cw());
+        }
         SPDLOG_TRACE("tracking_module: start tracking");
         unsigned int num_tracked_lms = 0;
         unsigned int num_reliable_lms = 0;
@@ -166,6 +174,8 @@ std::shared_ptr<Mat44_t> tracking_module::feed_frame(data::frame curr_frm) {
         cam_pose_wc = std::allocate_shared<Mat44_t>(Eigen::aligned_allocator<Mat44_t>(), curr_frm_.get_pose_wc());
     }
 
+
+
     // update last frame
     SPDLOG_TRACE("tracking_module: update last frame (curr_frm_={})", curr_frm_.id_);
     {
@@ -195,13 +205,12 @@ bool tracking_module::track(bool relocalization_is_needed,
 
     bool succeeded = false;
     if (relocalize_by_pose_is_requested()) {
-        std::cout << "Relocalizing by pose" << std::endl;
         // Force relocalization by pose
         succeeded = relocalize_by_pose(get_relocalize_by_pose_request());
     }
     else if (!relocalization_is_needed) {
         SPDLOG_TRACE("tracking_module: track_current_frame (curr_frm_={})", curr_frm_.id_);
-        succeeded = track_current_frame();
+            succeeded = track_current_frame();
     }
     else if (enable_auto_relocalization_) {
         // Compute the BoW representations to perform relocalization
@@ -235,6 +244,8 @@ bool tracking_module::track(bool relocalization_is_needed,
         SPDLOG_TRACE("tracking_module: update_motion_model (curr_frm_={})", curr_frm_.id_);
         update_motion_model();
     }
+
+    curr_frm_.set_num_lms(num_tracked_lms, num_reliable_lms);
 
     // update the frame statistics
     SPDLOG_TRACE("tracking_module: update_frame_statistics (curr_frm_={})", curr_frm_.id_);

@@ -54,7 +54,7 @@ public:
                           const camera::base* camera,
                           const std::vector<std::shared_ptr<data::landmark>>& landmarks,
                           Mat44_t& optimized_pose,
-                          std::vector<bool>& outlier_flags) const override;
+                          std::vector<bool>& outlier_flags, bool fixed) const override;
 
 private:
     //! Number of robust optimization (with outlier rejection) attempts
