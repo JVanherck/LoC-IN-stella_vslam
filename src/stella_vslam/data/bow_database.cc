@@ -66,6 +66,9 @@ std::vector<std::shared_ptr<keyframe>> bow_database::acquire_keyframes(const bow
         return std::vector<std::shared_ptr<keyframe>>();
     }
 
+    // print out the number of shared words for each keyframe
+
+
     // Set min_num_common_words_thr as 80 percentile of max_num_common_words
     // for the following selection of candidate keyframes.
     // (Delete frames from candidates if it has less shared words than 80% of the max_num_common_words)
@@ -76,6 +79,13 @@ std::vector<std::shared_ptr<keyframe>> bow_database::acquire_keyframes(const bow
         }
     }
     const auto min_num_common_words_thr = static_cast<unsigned int>(num_common_words_thr_ratio * max_num_common_words);
+
+    for (const auto& keyfrm_num_common_words_pair : num_common_words) {
+        const auto& keyfrm = keyfrm_num_common_words_pair.first;
+        const auto num_common_words = keyfrm_num_common_words_pair.second;
+        if(num_common_words >= min_num_common_words_thr)
+        spdlog::debug("keyframe id: {}, num_common_words: {}", keyfrm->id_, num_common_words);
+    }
 
     // Step 2.
     // Collect keyframe candidates which have more shared words than min_num_common_words_thr

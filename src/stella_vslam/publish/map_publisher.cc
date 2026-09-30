@@ -39,6 +39,7 @@ unsigned int map_publisher::get_camera_poses(std::vector<std::shared_ptr<Mat44_t
 
 unsigned int map_publisher::get_keyframes(std::vector<std::shared_ptr<data::keyframe>>& all_keyfrms) {
     auto roots = map_db_->get_spanning_roots();
+
     if (roots.empty()) {
         return 0;
     }

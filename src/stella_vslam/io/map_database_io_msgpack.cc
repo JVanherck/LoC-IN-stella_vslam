@@ -61,7 +61,7 @@ bool map_database_io_msgpack::load(const std::string& path,
 
     // load binary bytes
 
-    std::ifstream ifs(path, std::ios::in | std::ios::binary);
+    std::ifstream ifs(path, std::ios::in);
     if (!ifs.is_open()) {
         spdlog::critical("cannot load the file at {}", path);
         return false;
@@ -77,7 +77,10 @@ bool map_database_io_msgpack::load(const std::string& path,
         }
         msgpack.push_back(buffer);
     }
-    ifs.close();
+
+//    nlohmann::json json;
+//    ifs >> json;
+//    ifs.close();
 
     // parse into JSON
 

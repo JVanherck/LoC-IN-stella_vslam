@@ -193,6 +193,8 @@ public:
     //! depthmap factor (pixel_value / depthmap_factor = true_depth)
     double depthmap_factor_ = 1.0;
 
+    bool is_tracking() const;
+
 private:
     //! Check reset request of the system
     void check_reset_request();

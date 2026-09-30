@@ -77,7 +77,6 @@ inline reproj_edge_wrapper<T>::reproj_edge_wrapper(const std::shared_ptr<T>& sho
 
                 edge->setVertex(0, lm_vtx);
                 edge->setVertex(1, shot_vtx);
-
                 edge_ = edge;
             }
             else {

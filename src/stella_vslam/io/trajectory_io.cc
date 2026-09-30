@@ -58,6 +58,7 @@ void trajectory_io::save_frame_trajectory(const std::string& path, const std::st
 
     int offset = rk_itr->first;
     unsigned int prev_frm_id = 0;
+    int idx = 0;
     for (unsigned int i = 0; i < num_valid_frms; ++i, ++rk_itr, ++rc_itr) {
         // check frame ID
         assert(rk_itr->first == rc_itr->first);
@@ -97,6 +98,18 @@ void trajectory_io::save_frame_trajectory(const std::string& path, const std::st
                 << std::setprecision(9)
                 << trans_wc(0) << " " << trans_wc(1) << " " << trans_wc(2) << " "
                 << quat_wc.x() << " " << quat_wc.y() << " " << quat_wc.z() << " " << quat_wc.w() << std::endl;
+        }
+        else if (format == "COLMAP")
+        {
+//            if(frm_id % 10 != 0)
+//                continue;
+            const Mat33_t& rot_wc = cam_pose_cw.block<3, 3>(0, 0);
+            const Vec3_t& trans_wc = cam_pose_cw.block<3, 1>(0, 3);
+            const Quat_t quat_wc = Quat_t(rot_wc);
+            ofs << idx++ << " "
+                << std::setprecision(9) << quat_wc.w() << " " << quat_wc.x() << " " << quat_wc.y() << " " << quat_wc.z() << " "
+                << trans_wc(0) << " " << trans_wc(1) << " " << trans_wc(2) << " " << 1
+                << " frame_" << std::setw(6) << std::setfill('0') << frm_id << ".jpg "  << num_tracked_lms.at(frm_id) << std::endl << std::endl;
         }
         else if (format == "CUSTOM")
         {
