@@ -24,9 +24,12 @@ public:
     ~trajectory_io() = default;
 
     /**
-     * Save the frame trajectory in the specified format
+     * Save the frame trajectory in the specified format.
+     * When features_path is non-empty (TUM format only), also writes one
+     * line per saved frame with that frame's tracked landmark count, in the
+     * same order and with the same frames skipped as the main output.
      */
-    void save_frame_trajectory(const std::string& path, const std::string& format) const;
+    void save_frame_trajectory(const std::string& path, const std::string& format, const std::string& features_path = "") const;
 
     /**
      * Save the keyframe trajectory in the specified format

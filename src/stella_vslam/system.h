@@ -73,8 +73,11 @@ public:
     //-----------------------------------------
     // data I/O
 
-    //! Save the frame trajectory in the specified format
-    void save_frame_trajectory(const std::string& path, const std::string& format) const;
+    //! Save the frame trajectory in the specified format.
+    //! When features_path is non-empty, also writes one line per saved frame
+    //! with that frame's tracked landmark ("matched features") count, in the
+    //! same order and with the same frames skipped as path's TUM output.
+    void save_frame_trajectory(const std::string& path, const std::string& format, const std::string& features_path = "") const;
 
     //! Save the keyframe trajectory in the specified format
     void save_keyframe_trajectory(const std::string& path, const std::string& format) const;

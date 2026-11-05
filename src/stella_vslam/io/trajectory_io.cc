@@ -17,7 +17,7 @@ namespace io {
 trajectory_io::trajectory_io(data::map_database* map_db)
     : map_db_(map_db) {}
 
-void trajectory_io::save_frame_trajectory(const std::string& path, const std::string& format) const {
+void trajectory_io::save_frame_trajectory(const std::string& path, const std::string& format, const std::string& features_path) const {
     std::lock_guard<std::mutex> lock(data::map_database::mtx_database_);
 
     // 1. acquire the frame stats
@@ -44,6 +44,16 @@ void trajectory_io::save_frame_trajectory(const std::string& path, const std::st
     if (!ofs.is_open()) {
         spdlog::critical("cannot create a file at {}", path);
         throw std::runtime_error("cannot create a file at " + path);
+    }
+
+    const bool write_features = !features_path.empty() && format == "TUM";
+    std::ofstream features_ofs;
+    if (write_features) {
+        features_ofs.open(features_path, std::ios::out);
+        if (!features_ofs.is_open()) {
+            spdlog::critical("cannot create a file at {}", features_path);
+            throw std::runtime_error("cannot create a file at " + features_path);
+        }
     }
 
     spdlog::info("dump frame trajectory in \"{}\" format from frame {} to frame {} ({} frames)",
@@ -98,6 +108,9 @@ void trajectory_io::save_frame_trajectory(const std::string& path, const std::st
                 << std::setprecision(9)
                 << trans_wc(0) << " " << trans_wc(1) << " " << trans_wc(2) << " "
                 << quat_wc.x() << " " << quat_wc.y() << " " << quat_wc.z() << " " << quat_wc.w() << std::endl;
+            if (write_features) {
+                features_ofs << num_tracked_lms.at(frm_id) << std::endl;
+            }
         }
         else if (format == "COLMAP")
         {
@@ -131,6 +144,9 @@ void trajectory_io::save_frame_trajectory(const std::string& path, const std::st
     }
 
     ofs.close();
+    if (write_features) {
+        features_ofs.close();
+    }
 }
 
 void trajectory_io::save_keyframe_trajectory(const std::string& path, const std::string& format) const {

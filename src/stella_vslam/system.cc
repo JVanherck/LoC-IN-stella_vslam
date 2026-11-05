@@ -208,10 +208,10 @@ void system::shutdown() {
     system_is_running_ = false;
 }
 
-void system::save_frame_trajectory(const std::string& path, const std::string& format) const {
+void system::save_frame_trajectory(const std::string& path, const std::string& format, const std::string& features_path) const {
     pause_other_threads();
     io::trajectory_io trajectory_io(map_db_);
-    trajectory_io.save_frame_trajectory(path, format);
+    trajectory_io.save_frame_trajectory(path, format, features_path);
     resume_other_threads();
 }
 
